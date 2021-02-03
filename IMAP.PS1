@@ -1,57 +1,30 @@
-$EndpointName = "T-Online-IMAP-Endpoint"
-$IMAPserver = "secureimap.t-online.de"  # imapmail.t-online.de
-$Port = "993" ; $security = "Ssl"
 
-$EndpointName = "IONOS-IMAP-Endpoint" # https://www.ionos.com/help/email/email-migration-service/migrating-emails-and-folders-from-an-external-email-provider-to-ionos/
-$IMAPserver = "imap.ionos.de" 
-$Port = "993" ; $security = "Ssl"
+# Open in Powershell ISE {Ctrl+N} and edit the marked below
+$Mailbox = "<AffectedMailbox>"
 
-$EndpointName = "GMX-IMAP-Endpoint" # Enable IMAP first // https://hilfe.gmx.net/pop-imap/einschalten.html
-$IMAPserver = "imap.gmx.com"
-$Port = "993" ; $security = "Ssl"
+### Eg.: $Mailbox = "User@contoso.com"
+$Batch = "<BatchName>"
 
-$EndpointName = "GMAIL-IMAP-Endpoint"
-$IMAPserver = "imap.gmail.com"
-$Port = "993" ; $security = "Ssl" 
+### Eg.: $Batch = "User1 Contoso com"
+$MigrationEndpoint = "<MigrationEndpoint>"
 
-# Reference - Ports: IMAP(no ssl)143 (IMAP/TLS)993 (SMTP)587 (SSL)443
+### Eg.: $MigrationEndpoint = "IMAP Endpoint mail.contoso.com"
+$Path = $ENV:UserProfile\Desktop\Temp$Path = "C:\Temp"
 
-New-MigrationEndpoint -IMAP -Name $EndpointName -RemoteServer $IMAPserver -Port $Port -Security $security
+## choose any of the 2 Examples above and modify
+Get-MigrationBatch $Batch -IncludeReport -DiagnosticInfo "showtimeslots, showtimeline, verbose" | Export-Clixml $Path\MigrationBatch_$Batch.xml
 
-get-MigrationEndpoint $EndpointName | % { Test-MigrationServerAvailability -Imap -RemoteServer $_.RemoteServer -Port 993 }
+Get-MigrationUser $Mailbox | Export-Clixml $Path\MigrationUser_$Mailbox.xml
 
-Test-MigrationServerAvailability -Imap -RemoteServer $IMAPserver -Port $Port
+Get-MigrationUserStatistics $Mailbox -IncludeSkippedItems -IncludeReport -DiagnosticInfo "showtimeslots, showtimeline, verbose" | Export-Clixml $Path\MigrationUserStatistics_$Mailbox.xml
 
-- common issue - orphan IMAP sync request -
- >>  remove syncrequest
-Get-Syncrequest -mailbox "USER HERE" | Remove-syncrequest
+Get-SyncRequest $Mailbox | Export-Clixml C:\Temp\MSSupport\SyncRequest_$Mailbox.xml
 
-- check if you want to resume or remove the failed users / batches
- >>  Misc
-Get-MigrationUser | Set-MigrationUser -SyncNow
-Set-MigrationBatch -Identity MigrationBatch01 -SyncNow
-Set-MigrationBatch -Identity MigrationBatch01 -ApproveSkippedItems
+Get-SyncRequestStatistics $Mailbox -IncludeReport -DiagnosticInfo "showtimeslots, showtimeline, verbose" | Export-Clixml $Path\SyncRequestStatistics_$Mailbox.xml
 
- >>  remove failed migrationusers
-Foreach ($MigUser in (get-migrationuser).where({$_.status -eq 'failed'})) {
-remove-migrationuser -identity $MigUser.identity.ToString() -CF:$true }
+# IMAP_Optional
+Get-MigrationEndpoint $MigrationEndpoint -DiagnosticInfo Verbose | Export-Clixml $Path\MigrationEndpoint_$MigrationEndpoint.xml
 
- >> remove failed batches
-Foreach ($Batch in (get-MigrationBatch).where({$_.status -eq 'failed'})) {
-remove-MigrationBatch -identity $Batch.identity.ToString() -CF:$true }
+Get-MigrationConfig | Export-Clixml $Path\MigrationConfig.xml
 
- >> remove aready completed batches
-Foreach ($Batch in (get-MigrationBatch).where({$_.status -eq 'Completed'})) {
-remove-MigrationBatch -identity $Batch.identity.ToString() -CF:$true }
-
- >>  Set Completion time for 'CompletedWithErrors'
-Foreach ($Batch in (get-MigrationBatch).where({$_.status -eq 'CompletedWithErrors'})) {
-Set-MigrationBatch -identity $Batch.identity.ToString() -CompleteAfter (Get-Date).ToUniversalTime() -CF:$true }
-
- >> Set Completion time
-Foreach ($Batch in (get-MigrationBatch).where({$_.status -eq 'synced'})) {
-Set-MigrationBatch -identity $Batch.identity.ToString() -CompleteAfter (Get-Date).ToUniversalTime() -CF:$true }
-
- >> manual complete + final sync
-Foreach ($Batch in (get-MigrationBatch).where({$_.status -eq 'synced'})) {
-Complete-MigrationBatch -identity $Batch.identity.ToString() -SyncAndComplete -CF:$true }
+Get-MailboxFolderStatistics $Mailbox -IncludeOldestAndNewestItems -IncludeAnalysis -FolderScope nonipmroot | Export-Clixml $Path\MailboxFolderStatistics_$Mailbox.xml
