@@ -1,4 +1,4 @@
-﻿start-transcript -verbose
+start-transcript -verbose
 
 $user = ""  # modify AFFECTED@USER.com
 
@@ -48,7 +48,6 @@ $Param = @{ AuditOwner = 'AddFolderPermissions', 'ApplyRecord', 'Create', 'Send'
 set-MailboxAuditBypassAssociation -Identity $M.UserPrincipalname -AuditBypassEnabled $true   #OFF
 set-MailboxAuditBypassAssociation -Identity $M.UserPrincipalname -AuditBypassEnabled $false  #ON = update refresh Mbx Audit
    
-   Write-host $M.DisplayName ' ⋆⋅☆⋅⋆ Settings Applied  ⋆⋅☆⋅⋆ ' -F yellow -B DarkBlue
  Try { $M = Get-ExoMailbox $U -Properties Name,PrimarySMTPaddress,Displayname,Userprincipalname,Guid,DistinguishedName -PropertySets Audit -EA stop } catch { $M = get-mailbox $U }
  $M | fl *audit*
  Write-host "AFTER: $(@($M.AuditOwner).count) [Owner]" -F Yellow -n  ; Write-host "- Audited Operations: `n $($M.AuditOwner)`n" -F Green
