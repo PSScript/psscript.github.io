@@ -16,7 +16,7 @@ IF(!@(Get-InstalledModule ExchangeOnlineManagement -ErrorAction SilentlyContinue
 
 IF(!@($Credentials)) {$Credentials = Get-credential } ; IF(!@($ADMIN)) {$ADMIN = $Credentials.UserName }
 Try { Connect-ExchangeOnline -Credential $Credentials -EA stop } catch { Connect-ExchangeOnline -UserPrincipalName $ADMIN } }
-
+	
 Start-Transcript "$logsPATH\Transcript_$ts.txt"
 $FormatEnumerationLimit = -1
 
@@ -79,3 +79,4 @@ Compress-Archive -Path $logsPATH -DestinationPath "$DesktopPath\MS-Logs\Mailbox-
 Invoke-Item $DesktopPath\MS-Logs # open file manager
 $title = "Mailbox Audit Log Overview for [$user] from $((get-date).AddDays($start))"
 $data | group operation,clientprocessname,clientinfostring,ClientVersion,LogonType,clientip | select count,Name | Sort count,Operation -Descending | Out-GridView -T $title
+##
