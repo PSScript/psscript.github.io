@@ -1,10 +1,10 @@
-start-transcript -verbose
+﻿# start #
 
 $user = ""  # modify AFFECTED@USER.com
 
 # desktop/MS-Logs+Timestamp
 
-$ts = Get-Date -Format yyyyMMdd_hhmmss
+$ts = Get-Date -Format MM-dd_hh-mm
 $DesktopPath = ([Environment]::GetFolderPath('Desktop'))
 $logsPATH = mkdir "$DesktopPath\MS-Logs\Mailbox-Audit-Logs_$ts"
 
@@ -15,7 +15,7 @@ IF(!@(Get-InstalledModule ExchangeOnlineManagement -ErrorAction SilentlyContinue
 
 IF(!@($Credentials)) {$Credentials = Get-credential } ; IF(!@($ADMIN)) {$ADMIN = $Credentials.UserName }
 Try { Connect-ExchangeOnline -Credential $Credentials -EA stop } catch { Connect-ExchangeOnline -UserPrincipalName $ADMIN } }
-
+	
 Start-Transcript "$logsPATH\Transcript_$ts.txt"
 $FormatEnumerationLimit = -1
 
@@ -57,3 +57,4 @@ set-MailboxAuditBypassAssociation -Identity $M.UserPrincipalname -AuditBypassEna
  } # End Foreach per User
 
 stop-transcript
+# end #
